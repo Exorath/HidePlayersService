@@ -45,7 +45,7 @@ public class MongoService implements Service {
     @Override
     public Success setVisibilityPlayer(String uuid, VisibilityPlayer player) {
         try {
-            visibilityPlayersCollection.updateOne(new Document("_id", uuid), Updates.set("state", player.getState()), new UpdateOptions().upsert(true));
+            visibilityPlayersCollection.updateOne(new Document("_id", uuid), Updates.set("state", player.getState().toString()), new UpdateOptions().upsert(true));
             return new Success(true);
         } catch (Exception e) {
             e.printStackTrace();
