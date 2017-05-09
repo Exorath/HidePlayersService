@@ -1,0 +1,95 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    name: mongo-hideplayers
+  name: mongo-hideplayers
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: mongo-hideplayers
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        name: mongo-hideplayers
+    spec:
+      containers:
+      - image: mongo
+        imagePullPolicy: IfNotPresent
+        name: mongo
+        ports:
+        - containerPort: 27017
+          name: mongo
+          protocol: TCP
+        volumeMounts:
+        - mountPath: /data/db
+          name: mongo-persistent-storage
+      restartPolicy: Always
+      volumes:
+      - hostPath:
+          path: /data/mongo/hideplayers
+        name: mongo-persistent-storage
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    name: mongo-hideplayers
+  name: mongo-hideplayers
+spec:
+  ports:
+  - port: 27017
+    protocol: TCP
+    targetPort: 27017
+  selector:
+    name: mongo-hideplayers
+
+
+
+---
+
+
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: hideplayersservice
+  labels:
+    app: hideplayersservice
+spec:
+  ports:
+    - port: 8080
+  selector:
+    app: hideplayersservice
+  type: ClusterIP
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: hideplayersservice
+  labels:
+    app: hideplayersservice
+spec:
+  strategy:
+    type: Recreate
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: hideplayersservice
+    spec:
+      containers:
+      - name: hideplayersservice
+        image: exorath/hideplayersservice
+        ports:
+        - containerPort: 8080
+        env:
+        - name: PORT
+          value: "8080"
+        - name: MONGO_URI
+          value: "mongodb://mongo-hideplayers:27017"
+        - name: DB_NAME
+          value: "hideplayersservice"
